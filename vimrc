@@ -3,15 +3,23 @@ set autoindent
 set shiftwidth=4
 set tabstop=4
 set smartindent
+""set foldmethod=syntax
 
 syntax enable
-colorscheme molokai
+""colorscheme molokai
 "let g:molokai_original=1
 "let g:rehash256 = 1
 
-if has('mouse')
-	set mouse=a
+if has("gui_running")
+   colorscheme molokai 
+else
+	colorscheme molokai
+	"colorscheme koehler
 endif
+
+"if has('mouse')
+"	set mouse=a
+"endif
 
 " Set backspace"
 set backspace=indent,eol,start
@@ -21,8 +29,13 @@ set backspace=indent,eol,start
 function! NumberToggle()
   if(&relativenumber == 1)
     set number
+	set norelativenumber
   else
-    set relativenumber
+	  if(&number == 1)
+		  set nonumber
+      else
+          set relativenumber
+      endif
   endif
 endfunc
 
@@ -104,6 +117,9 @@ if has("cscope")
 	" add any database in current directory
 	if filereadable("cscope.out")
 		cs add cscope.out
+	" add any database in parent directory
+	elseif filereadable("../cscope.out")
+		cs add ../cscope.out
 	" else add database pointed to by environment
 	elseif $CSCOPE_DB != ""
 		cs add $CSCOPE_DB
@@ -123,3 +139,36 @@ if has("cscope")
 endif
 
 
+" Highlight all instances of word under cursor, when idle.
+" Useful when studying strange source code.
+" Type z/ to toggle highlighting on/off.
+nnoremap z/ :if AutoHighlightToggle()<Bar>set hls<Bar>endif<CR>
+function! AutoHighlightToggle()
+    let @/ = ''
+    if exists('#auto_highlight')
+        au! auto_highlight
+        augroup! auto_highlight
+        setl updatetime=4000
+        echo 'Highlight current word: off'
+        return 0
+    else
+        augroup auto_highlight
+            au!
+            au CursorHold * let @/ = '\V\<'.escape(expand('<cword>'), '\').'\>'
+        augroup end
+        setl updatetime=500
+        echo 'Highlight current word: ON'
+        return 1
+    endif
+endfunction
+
+""highlight OverLength ctermbg=red ctermfg=white guibg=#592929
+""match OverLength /\%81v.\+/
+
+if exists('+colorcolumn')
+  set colorcolumn=80
+else
+  au BufWinEnter * let w:m2=matchadd('ErrorMsg', '\%>80v.\+', -1)
+endif
+
+set cursorline
